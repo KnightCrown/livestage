@@ -200,7 +200,6 @@ export function useVideo(url: string | null, opts: { lazy?: boolean; alpha?: boo
     v.muted = true;
     v.loop = true;
     v.preload = "auto";
-    if (!lazy) v.src = url;
     const texture = new THREE.VideoTexture(v);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
@@ -234,7 +233,11 @@ export function useVideo(url: string | null, opts: { lazy?: boolean; alpha?: boo
     const handle: VideoHandle = { video: v, texture, url, warm: !lazy, lastSeek: 0, shownTime: -1, correcting: 0, parked: true, framed: false };
     arm();
     setH(handle);
+    // StrictMode replays effects immediately. Starting and cancelling native
+    // metadata loads in that replay can wedge WebKit's AVAsset teardown on Intel.
+    const loadTimer = !lazy ? setTimeout(() => { v.src = url; }, 0) : null;
     return () => {
+      if (loadTimer !== null) clearTimeout(loadTimer);
       v.pause();
       v.removeAttribute("src");
       v.load();

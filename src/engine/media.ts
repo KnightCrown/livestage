@@ -70,7 +70,7 @@ export function wallFormat(): WallFormat {
 /** Problems of an asset against the current wall (recomputed from its probe so a wall-size change counts). */
 export function assetProblems(a: Asset, wall: WallFormat = wallFormat()): MediaProblem[] {
   if (a.type !== "video") return [];
-  if (a.probe) return checkMedia(a.probe, wall, { hasAlpha: a.hasAlpha || a.alphaPacked });
+  if (a.probe) return checkMedia(a.probe, wall, { hasAlpha: a.hasAlpha, alphaPacked: a.alphaPacked });
   return a.problems ?? [];
 }
 
@@ -98,7 +98,7 @@ export async function checkAsset(a: Asset): Promise<Asset> {
   if (!isTauri || !path) return a;
   try {
     const probe = await probeFile(path);
-    return { ...a, probe, problems: checkMedia(probe, wallFormat(), { hasAlpha: a.hasAlpha || a.alphaPacked }) };
+    return { ...a, probe, problems: checkMedia(probe, wallFormat(), { hasAlpha: a.hasAlpha, alphaPacked: a.alphaPacked }) };
   } catch (e) {
     return { ...a, problems: [{ severity: "warn", code: "unreadable", message: `Could not read the file: ${String(e)}`, fixable: false }] };
   }
